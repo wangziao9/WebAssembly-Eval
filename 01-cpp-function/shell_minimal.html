@@ -55,6 +55,11 @@
     <hr>
     <button id="mybutton">Run My Function</button>
     <form id="frm"> Value: <input type="number"> </form>
+    <select id="selectfunc">
+      <option value="1">Sum Primes</option>
+      <option value="2">Fibonacci</option>
+      <option value="3">Matrix Mult</option>
+    </select>
     <p id="echo"></p>
     
     <script type='text/javascript'>
@@ -118,12 +123,13 @@
       };
       document.getElementById("mybutton").addEventListener("click", () => {
         var userinput = document.getElementById("frm").elements[0].value;
-        document.getElementById("echo").innerHTML = userinput;
+        var selectedfn = document.getElementById("selectfunc").selectedIndex;
+        document.getElementById("echo").innerHTML = selectedfn + ", " + userinput;
         const result = Module.ccall(
           "runner", // name of C function
           null, // return type
-          ['number'], // argument types
-          [userinput], // arguments
+          ['number','number'], // argument types
+          [userinput,selectedfn], // arguments
         );
       });
     </script>
