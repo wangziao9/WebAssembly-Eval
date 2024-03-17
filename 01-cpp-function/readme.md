@@ -8,7 +8,7 @@ This benchmark compares the runtime of native C++ vs WebAssembly for arbitrary C
 
 Testcase 1: Calculating the sum of all prime numbers that is not greater than N. Task is CPU-Bound.
 
-| N | Native(ms) | WebAssembly (ms) | JavaScript (ms) | JavaScript-BigInt (ms)
+| N | Native(ms) | WebAssembly (ms) | JavaScript (ms) | JavaScript-BigInt (ms) |
 | ------- | ------- | ------- | ------- | ------- |
 | 10000 | 1 | 0 | 4 | 26 |
 | 30000 | 4 | 4 | 6 | 74 |
@@ -22,18 +22,18 @@ For this example application and range of inputs, JavaScript and WebAssembly's v
 
 Testcase 2: Calculating Fibonacci numbers fib(x). This task is also CPU bound but involves lots of function calls (recursion).
 
-| x | Navive(ms) | WebAssembly(ms) | 
-| ------- | -------| ------- |
-| 30 | 2 | 4 |
-| 35 | 19 | 28 |
-| 40 | 100 | 258 |
-| 45 | 821 | 2789 |
+| x | Navive(ms) | WebAssembly(ms) | JavaScript(ms) |
+| ------- | -------| ------- | ------- |
+| 30 | 0 | 2 | 12 |
+| 35 | 15 | 20 | 130 |
+| 40 | 100 | 230 | 1455 |
+| 45 | 1063 | 2571 | 16223 |
 
 In this testcase, WebAssembly is evidently slower than Native code. We infer that function calls are more expensive in WebAssembly.
 
 Testcase 3: Matrix multiplication. Two integer matrices of size N x N are filled with numbers generated from Linear Congruential Generator and then multiplied. This task takes a lot of arithmetic operations and memory access.
 
-| N | Navive(ms) | WebAssembly(ms) | 
+| N | Navive(ms) | WebAssembly(ms) |
 | ------- | -------| ------- |
 | 100 | 2 | 2 |
 | 200 | 13 | 9 |
@@ -46,5 +46,15 @@ Testcase 3: Matrix multiplication. Two integer matrices of size N x N are filled
 | 2000 | 6196 | 8357 |
 | 2500 | 14647 | 19993 |
 | 3000 | 23813 | 31348 |
+
+| N | Navive(ms) | WebAssembly(ms) | JavaScript(ms) |
+| ------- | -------| ------- | -------  |
+| 100 | 0 | 1 | 23 |
+| 200 | 0 | 5 | 204 |
+| 300 | 31 | 20 | 669 |
+| 400 | 37 | 48 | 1348 |
+| 500 | 84 | 94 | 2625 |
+| 700 | 224 | 281 | 7146 |
+| 1000 | 829 | 1022 | 22186 |
 
 On this task, WebAssembly is slower than native. Without the `-s ALLOW_MEMORY_GROWTH=1` emcc compiler option, WebAssembly throws an OOM (out of memory) exception for N >= 1500, since it defaults to using a fixed sized (16MB) memory.

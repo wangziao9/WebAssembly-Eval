@@ -28,7 +28,7 @@ long long fib(int x){
 
 int lcg(int x){
     // Linear Congruential Generator
-    int modulus = (1 << 16) + 1;
+    int modulus = (1 << 15) + 1;
     int a = 75;
     int c = 74;
     return (a*x+c)%modulus;
