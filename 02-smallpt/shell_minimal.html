@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Emscripten-Generated Code</title>
+    <style>
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      textarea.emscripten { font-family: monospace; width: 80%; }
+      div.emscripten { text-align: center; }
+      div.emscripten_border { border: 1px solid black; }
+
+      .spinner {
+        height: 50px;
+        width: 50px;
+        margin: 0px auto;
+        -webkit-animation: rotation .8s linear infinite;
+        -moz-animation: rotation .8s linear infinite;
+        -o-animation: rotation .8s linear infinite;
+        animation: rotation 0.8s linear infinite;
+        border-left: 10px solid rgb(0,150,240);
+        border-right: 10px solid rgb(0,150,240);
+        border-bottom: 10px solid rgb(0,150,240);
+        border-top: 10px solid rgb(100,0,200);
+        border-radius: 100%;
+        background-color: rgb(200,100,250);
+      }
+      @-webkit-keyframes rotation {
+        from {-webkit-transform: rotate(0deg);}
+        to {-webkit-transform: rotate(360deg);}
+      }
+      @-moz-keyframes rotation {
+        from {-moz-transform: rotate(0deg);}
+        to {-moz-transform: rotate(360deg);}
+      }
+      @-o-keyframes rotation {
+        from {-o-transform: rotate(0deg);}
+        to {-o-transform: rotate(360deg);}
+      }
+      @keyframes rotation {
+        from {transform: rotate(0deg);}
+        to {transform: rotate(360deg);}
+      }
+
+    </style>
+  </head>
+  <body>
+    <hr/>
+    <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>emscripten</strong></center></figure>
+    <div class="emscripten" id="status">Downloading...</div>
+    <div class="emscripten">
+      <progress value="0" max="100" id="progress" hidden=1></progress>  
+    </div>
+    <textarea class="emscripten" id="output" rows="8"></textarea>
+    <hr>
+    <form id="imgsize">
+      Image Width: <input type="number" value="512"><br>
+      Image Height: <input type="number" value="384"><br>
+    </form>
+    <button id="mybutton">Run Smallpt</button>
+    <form id="frm">
+      Glass Ball x: <input type="number" value="73"><br>
+      Glass Ball y: <input type="number" value="16.5"><br>
+      Glass Ball z: <input type="number" value="78"><br>
+      Glass Ball r: <input type="number" value="16.5"><br>
+      Samples Per Pixel: <input type="number" value="4">
+    </form>
+    <p id="echo"></p>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" width="1024" height="768"></canvas>
+    <p id="debug">below canvas</p>
+    
+    <script type='text/javascript'>
+      var statusElement = document.getElementById('status');
+      var progressElement = document.getElementById('progress');
+      var spinnerElement = document.getElementById('spinner');
+
+      var Module = {
+        print: (function() {
+          var element = document.getElementById('output');
+          if (element) element.value = ''; // clear browser cache
+          return (...args) => {
+            var text = args.join(' ');
+            // These replacements are necessary if you render to raw HTML
+            //text = text.replace(/&/g, "&amp;");
+            //text = text.replace(/</g, "&lt;");
+            //text = text.replace(/>/g, "&gt;");
+            //text = text.replace('\n', '<br>', 'g');
+            console.log(text);
+            if (element) {
+              element.value += text + "\n";
+              element.scrollTop = element.scrollHeight; // focus on bottom
+            }
+          };
+        })(),
+        setStatus: (text) => {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.last.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Module.setStatus.last.time < 30) return; // if this is a progress update, skip it if too soon
+          Module.setStatus.last.time = now;
+          Module.setStatus.last.text = text;
+          if (m) {
+            text = m[1];
+            progressElement.value = parseInt(m[2])*100;
+            progressElement.max = parseInt(m[4])*100;
+            progressElement.hidden = false;
+            spinnerElement.hidden = false;
+          } else {
+            progressElement.value = null;
+            progressElement.max = null;
+            progressElement.hidden = true;
+            if (!text) spinnerElement.hidden = true;
+          }
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: (left) => {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+      };
+      Module.setStatus('Downloading...');
+      window.onerror = () => {
+        Module.setStatus('Exception thrown, see JavaScript console');
+        spinnerElement.style.display = 'none';
+        Module.setStatus = (text) => {
+          if (text) console.error('[post-exception status] ' + text);
+        };
+      };
+      document.getElementById("mybutton").addEventListener("click", () => {
+        var imgSizeFrm = document.getElementById("imgsize")
+        var w = imgSizeFrm.elements[0].value;
+        var h = imgSizeFrm.elements[1].value;
+        var frm = document.getElementById("frm");
+        var glassX = frm.elements[0].value;
+        var glassY = frm.elements[1].value;
+        var glassZ = frm.elements[2].value;
+        var glassR = frm.elements[3].value;
+        var spp = frm.elements[4].value;
+        img = Module.render(w, h, glassX, glassY, glassZ, glassR, spp);
+        // draw
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var imageData = ctx.createImageData(w, h);
+        console.log("Typeof:");
+        console.log(typeof img);
+        document.getElementById("debug").innerHTML = "Uint8Array Size: " + img.length;
+        for (var i = 0; i < w*h; i += 1) {
+            imageData.data[4*i] = img[3*i]; // Red channel
+            imageData.data[4*i + 1] = img[3*i + 1]; // Green channel
+            imageData.data[4*i + 2] = img[3*i + 2]; // Blue channel
+            imageData.data[4*i + 3] = 255; // Alpha channel (fully opaque)
+        }
+        ctx.putImageData(imageData, 0, 0);
+      });
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>
